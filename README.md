@@ -1,4 +1,121 @@
-# Analysis Report: 3SAT Solver Implementation and Results
+# The 3SAT Problem: Analysis and Report
+
+## Problem and Algorithm Overview
+
+### The 3SAT Problem
+
+The 3SAT (3-Satisfiability) problem is a fundamental problem in computer science that asks whether a given Boolean formula in 3-Conjunctive Normal Form (3CNF) is satisfiable. A 3CNF formula has these characteristics:
+
+- Composed of clauses connected by AND (∧) operators
+- Each clause contains exactly three literals connected by OR (∨) operators
+- Each literal is either a variable or its negation
+
+Example formula:
+
+```
+(x₁ ∨ x₂ ∨ ¬x₃) ∧ (¬x₁ ∨ x₂ ∨ x₄) ∧ (x₂ ∨ ¬x₄ ∨ x₃)
+```
+
+Key properties:
+
+1. NP-complete problem
+2. No known polynomial-time solution
+3. Exhibits phase transition at clause-to-variable ratio ≈ 4.26
+
+### Solving Algorithms
+
+#### 1. DPLL (Davis-Putnam-Logemann-Loveland)
+
+A complete algorithm that uses intelligent backtracking and several optimization rules:
+
+1. **Pure Literal Rule**
+   - Identifies variables that appear only positively or negatively
+   - Assigns values to satisfy these literals immediately
+   - Example: If x₁ only appears as ¬x₁, assign x₁ = FALSE
+
+2. **Unit Clause Rule**
+   - Identifies clauses with single unassigned literal
+   - Forces assignment to satisfy these clauses
+   - Example: For clause (x₁), must assign x₁ = TRUE
+
+3. **Variable Selection**
+   - Chooses most frequent unassigned variable
+   - Creates two branches (TRUE/FALSE assignments)
+   - Recursively solves simplified formulas
+
+4. **Formula Simplification**
+   - Removes satisfied clauses
+   - Removes FALSE literals from remaining clauses
+   - Detects contradictions early
+
+Pseudo-code:
+
+```
+DPLL(formula, assignment):
+  if formula is empty:
+    return assignment
+  if formula contains empty clause:
+    return UNSATISFIABLE
+    
+  if has_pure_literal(formula):
+    apply pure literal rule
+    return DPLL(simplified_formula, updated_assignment)
+    
+  if has_unit_clause(formula):
+    apply unit propagation
+    return DPLL(simplified_formula, updated_assignment)
+    
+  var = select_variable(formula)
+  return DPLL(formula + {var}) or DPLL(formula + {¬var})
+```
+
+#### 2. Exhaustive Search
+
+A brute-force approach that systematically explores all possible assignments:
+
+1. **Search Space**
+   - 2ⁿ possible assignments for n variables
+   - Complete exploration guarantees finding solution if exists
+
+2. **Implementation**
+   - Recursive assignment of variables
+   - Early termination on satisfying assignment
+   - Complete verification of unsatisfiability
+
+Pseudo-code:
+
+```
+ExhaustiveSearch(formula, current_var, assignment):
+  if all variables assigned:
+    return evaluate_formula(formula, assignment)
+    
+  try TRUE assignment:
+  assignment[current_var] = TRUE
+  if ExhaustiveSearch(formula, current_var + 1, assignment):
+    return TRUE
+    
+  try FALSE assignment:
+  assignment[current_var] = FALSE
+  return ExhaustiveSearch(formula, current_var + 1, assignment)
+```
+
+#### 3. Phase Transition
+
+The phase transition phenomenon in 3SAT:
+
+1. **Critical Ratio (m/n ≈ 4.26)**
+   - m: number of clauses
+   - n: number of variables
+
+2. **Behavior**
+   - ratio < 4.26: Usually satisfiable
+   - ratio > 4.26: Usually unsatisfiable
+   - At 4.26: Maximum computational difficulty
+
+3. **Impact on Solving**
+   - Hardest instances near critical ratio
+   - Solving time peaks around transition
+   - Important for algorithm benchmarking
 
 ## Executive Summary
 
