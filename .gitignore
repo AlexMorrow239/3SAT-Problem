@@ -1,0 +1,28 @@
+# Python #
+##########
+*.pyc
+*.pyo
+__pycache__/
+
+# Visual Studio #
+#################
+.vscode/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# macOS #
+########
+*.DS_Store
+
+# Windows #
+###########
+Thumbs.db
+Desktop.ini
+
+# Linux #
+#########
+*~
