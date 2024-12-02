@@ -98,7 +98,7 @@ class DPLLSolver(SATSolver):
     def solve(self, formula: Formula) -> Dict[int, bool]:
         """Main DPLL solving method."""
 
-        if self.debug: logger.debug("Starting DPLL Solver\n")
+        if self.debug: logger.debug("Starting DPLL Solver")
 
         self.reset_stats()
         result = self._dpll(formula, {})
@@ -112,7 +112,7 @@ class DPLLSolver(SATSolver):
         if self.debug:
             self.stats['depth'] += 1
             indent = "  " * self.stats['depth']
-            logger.debug(f"\n{indent}{'='*40}")
+            logger.debug(f"{indent}{'='*40}")
             logger.debug(f"{indent}DPLL at depth {self.stats['depth']}")
             logger.debug(f"{indent}Current formula:")
             for i, clause in enumerate(formula.clauses, 1):
