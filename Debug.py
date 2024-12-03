@@ -69,6 +69,8 @@ def debug_solver(n: int, ratio: float, num_trials: int = 1):
         print(f"Statistics:")
         for stat, value in dpll.stats.items():
             print(f"  {stat}: {value}")
+
+        print("\n" + "-" * 20)
         
         # Exhaustive Search Analysis
         exhaustive = ExhaustiveSATSolver(debug=True)
@@ -87,7 +89,7 @@ def debug_solver(n: int, ratio: float, num_trials: int = 1):
         print(f"Statistics:")
         for stat, value in exhaustive.stats.items():
             print(f"  {stat}: {value}")
-        
+                
         # Consistency Check
         print("\nConsistency Analysis:")
         results_match = (dpll_result is None) == (exhaustive_result is None)
@@ -104,5 +106,34 @@ def debug_solver(n: int, ratio: float, num_trials: int = 1):
                 print("DPLL solution verification:")
                 verify_assignment(formula, dpll_result)
 
+def main():
+    while True:
+        n = input("Enter the number of variables (must be greater than 2): ")
+        if n.isdigit() and int(n) > 2:
+            n = int(n)
+            break
+        else:
+            print("Invalid input. Please enter a number greater than 2.")
+    
+    while True:
+        ratio = input("Enter the clause to variable ratio (m/n): ")
+        try:
+            ratio = float(ratio)
+            if ratio > 0:
+                break
+            else:
+                print("Invalid input. Please enter a number greater than 0.")
+        except ValueError:
+            print("Invalid input. Please enter a valid number.")
+    
+    while True:
+        num_trials = input("Enter the number of trials: ")
+        if num_trials.isdigit() and int(num_trials) > 0:
+            num_trials = int(num_trials)
+            break
+        else:
+            print("Invalid input. Please enter a number greater than 0.")
+    debug_solver(int(n), float(ratio), int(num_trials))
+
 if __name__ == "__main__":
-    debug_solver(n=5, ratio=4.26, num_trials=1)
+    main()
