@@ -7,7 +7,6 @@ from collections import Counter
 import logging
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 
 logging.basicConfig(level=logging.DEBUG, 

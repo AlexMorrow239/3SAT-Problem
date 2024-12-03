@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from SAT import RandomFormulaGenerator, ExhaustiveSATSolver, DPLLSolver
+from typing import Dict, Tuple, Any
 
-def compare_solvers(n: int, ratio: float, results: dict, run_exhaustive=True):
+def compare_solvers(n: int, ratio: float, results: Dict[Tuple[int, float], Dict[str, Any]], run_exhaustive=True):
     """Compare DPLL and optionally Exhaustive search on the same formula."""
     generator = RandomFormulaGenerator()
     formula = generator.generate(n, int(n * ratio))
