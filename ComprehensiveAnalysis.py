@@ -409,8 +409,8 @@ def run_comprehensive_analysis():
     
     # Configuration
     small_n = [5, 10, 15]  # For all solvers
-    large_n = [20, 25, 30]  # For DPLL only
-    ratios = [3.0, 3.5, 3.8, 4.0, 4.1, 4.2, 4.26, 4.3, 4.4, 4.6, 4.8, 5.0]
+    large_n = [20, 25, 30, 40]  # For DPLL only
+    ratios = [2.0, 3.0, 3.5, 4.26, 5.0, 7.0]
     trials_per_config = 10
     
     results = {}
