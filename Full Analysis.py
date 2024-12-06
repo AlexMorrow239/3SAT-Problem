@@ -56,10 +56,9 @@ def plot_results(results: dict):
     
     # Select 5 evenly spaced values of n
     all_n = sorted(df['n'].unique())
-    n_values = np.linspace(all_n[0], all_n[-1], 5, dtype=int)
     
     # Main satisfiability plot
-    for n in n_values:
+    for n in all_n:
         subset = df[df['n'] == n]
         sat_prob = subset.groupby('ratio')['is_sat'].mean() * 100  # Convert to percentage
         plt.plot(sat_prob.index, sat_prob.values, 'o-', label=f'n={n}', linewidth=2)
@@ -143,10 +142,10 @@ def main():
 
     # Define two sets of parameters: one for exhaustive search and one for DPLL only
     small_n = [5, 10, 15]  # For both DPLL and exhaustive
-    large_n = [20, 25, 30, 35]  # For DPLL only
+    large_n = [20, 25, 30, 35, 40]  # For DPLL only
     
     # More granular ratios, especially around phase transition
-    ratios = [3.0, 3.5, 3.8, 4.0, 4.1, 4.2, 4.26, 4.3, 4.4, 4.6, 4.8, 5.0, 5.5]
+    ratios = [3.0, 3.5, 3.8, 4.0, 4.1, 4.2, 4.26, 4.3, 4.4, 4.6, 4.8, 5.0, 5.5, 7.0]
     trials = 10
     
     results = {}

@@ -91,6 +91,7 @@ class DPLLSolver(SATSolver):
             'backtracks': 0,
             'pure_literals': 0,
             'unit_clauses': 0,
+            'two_clauses': 0,
             'depth': 0 if self.debug else None
         }
 
@@ -103,9 +104,53 @@ class DPLLSolver(SATSolver):
         result = self._dpll(formula, {})
         return result
 
+    def _find_pure_literals(self, formula: Formula) -> Dict[int, bool]:
+        """Find variables that appear only positively or only negatively."""
+        # Track positive and negative occurrences
+        pos_vars = set()
+        neg_vars = set()
+        
+        for clause in formula.clauses:
+            for lit in clause.literals:
+                if lit.is_positive:
+                    pos_vars.add(lit.variable)
+                else:
+                    neg_vars.add(lit.variable)
+        
+        # Find pure literals
+        pure_assignments = {}
+        for var in pos_vars:
+            if var not in neg_vars:  # Only appears positively
+                pure_assignments[var] = True
+                self.stats['pure_literals'] += 1
+        for var in neg_vars:
+            if var not in pos_vars:  # Only appears negatively
+                pure_assignments[var] = False
+                self.stats['pure_literals'] += 1
+                
+        return pure_assignments
+
+    def _find_unit_clauses(self, formula: Formula) -> Dict[int, bool]:
+        """Find unit clauses and their implied assignments."""
+        assignments = {}
+        for clause in formula.clauses:
+            if len(clause.literals) == 1:
+                lit = clause.literals[0]
+                assignments[lit.variable] = lit.is_positive
+                self.stats['unit_clauses'] += 1
+        return assignments
+
+    def _find_two_clause_branch(self, formula: Formula) -> Optional[tuple[int, bool]]:
+        """Find a two-literal clause for branching. Returns (variable, assignment) or None."""
+        for clause in formula.clauses:
+            if len(clause.literals) == 2:
+                self.stats['two_clauses'] += 1
+                return (clause.literals[0].variable, clause.literals[0].is_positive)
+        return None
+
     def _dpll(self, formula: Formula, assignments: Dict[int, bool]) -> Optional[Dict[int, bool]]:
         """
-        Modified DPLL to return assignments directly instead of bool.
+        Modified DPLL to apply rules in order: Pure, Unit, Two-Clause.
         Returns None if unsatisfiable, otherwise returns complete assignment dict.
         """
         if self.debug:
@@ -122,111 +167,97 @@ class DPLLSolver(SATSolver):
         if not formula.clauses:
             if self.debug:
                 logger.debug(f"{indent}SUCCESS: Empty formula - all clauses satisfied")
-                logger.debug(f"{indent}Completing partial assignment...")
-            
-            complete_assignment = assignments.copy()
-            for var in range(1, formula.num_variables + 1):
-                if var not in complete_assignment:
-                    complete_assignment[var] = True
-                    if self.debug:
-                        logger.debug(f"{indent}  Setting unassigned var x{var}=True")
-            
-            if self.debug:
-                logger.debug(f"{indent}Final complete assignment: {complete_assignment}")
-            return complete_assignment
+            return self._complete_assignment(assignments, formula.num_variables)
 
         if any(not clause.literals for clause in formula.clauses):
             self.stats['backtracks'] += 1
             if self.debug:
                 logger.debug(f"{indent}FAIL: Empty clause found - contradiction")
-                logger.debug(f"{indent}Backtracking... (total backtracks: {self.stats['backtracks']})")
             return None
 
-        # Try unit clauses first (most constrained)
-        for clause in formula.clauses:
-            if len(clause.literals) == 1:
-                lit = clause.literals[0]
-                if self.debug:
-                    logger.debug(f"{indent}Found unit clause: {clause}")
-                    logger.debug(f"{indent}Applying unit propagation: x{lit.variable}={lit.is_positive}")
-                
-                new_assignments = assignments.copy()
-                new_assignments[lit.variable] = lit.is_positive
-                self.stats['unit_clauses'] += 1
-                
-                if self.debug:
-                    logger.debug(f"{indent}Simplifying formula with unit assignment...")
-                
-                simplified = self._simplify_formula(formula, new_assignments)
-                
-                if self.debug:
-                    logger.debug(f"{indent}After simplification:")
-                    for i, cl in enumerate(simplified.clauses, 1):
-                        logger.debug(f"{indent}  Clause {i}: {cl}")
-                
-                result = self._dpll(simplified, new_assignments)
-                if result is not None:
-                    return result
-                
-                if self.debug:
-                    logger.debug(f"{indent}Unit propagation branch failed, backtracking...")
-                return None
+        # 1. Pure Literal Rule
+        pure_assignments = self._find_pure_literals(formula)
+        if pure_assignments:
+            if self.debug:
+                logger.debug(f"{indent}Found pure literals: {pure_assignments}")
+            
+            new_assignments = assignments.copy()
+            new_assignments.update(pure_assignments)
+            return self._dpll(
+                self._simplify_formula(formula, pure_assignments),
+                new_assignments
+            )
 
-        # Choose most frequent unassigned variable
-        var = None
-        max_freq = -1
+        # 2. Unit Clause Rule
+        unit_assignments = self._find_unit_clauses(formula)
+        if unit_assignments:
+            if self.debug:
+                logger.debug(f"{indent}Found unit clauses: {unit_assignments}")
+            
+            new_assignments = assignments.copy()
+            new_assignments.update(unit_assignments)
+            return self._dpll(
+                self._simplify_formula(formula, unit_assignments),
+                new_assignments
+            )
+
+        # 3. Two-Clause Rule
+        two_clause_branch = self._find_two_clause_branch(formula)
+        if two_clause_branch:
+            var, value = two_clause_branch
+            if self.debug:
+                logger.debug(f"{indent}Found two-clause branch: x{var}={value}")
+            
+            # Try first branch
+            new_assignments = assignments.copy()
+            new_assignments[var] = value
+            result = self._dpll(
+                self._simplify_formula(formula, {var: value}),
+                new_assignments
+            )
+            if result is not None:
+                return result
+            
+            # Try second branch
+            new_assignments = assignments.copy()
+            new_assignments[var] = not value
+            self.stats['backtracks'] += 1
+            return self._dpll(
+                self._simplify_formula(formula, {var: not value}),
+                new_assignments
+            )
+
+        # 4. Most Frequent Variable Rule (default branching)
         var_counts = Counter()
         for clause in formula.clauses:
             for lit in clause.literals:
                 if lit.variable not in assignments:
                     var_counts[lit.variable] += 1
-                    if var_counts[lit.variable] > max_freq:
-                        var = lit.variable
-                        max_freq = var_counts[lit.variable]
-
-        if var is None:  # All variables assigned
-            if self.debug:
-                logger.debug(f"{indent}All variables assigned, verifying solution...")
-            is_sat = self._verify_formula(formula, assignments)
-            if self.debug:
-                if is_sat:
-                    logger.debug(f"{indent}SUCCESS: Valid solution found!")
-                else:
-                    logger.debug(f"{indent}FAIL: Invalid solution")
-            return assignments if is_sat else None
-
-        if self.debug:
-            logger.debug(f"{indent}Selected branching variable x{var} (frequency: {max_freq})")
-            logger.debug(f"{indent}Variable frequencies: {dict(var_counts)}")
-
-        # Try True first
-        if self.debug:
-            logger.debug(f"{indent}Trying branch x{var}=True")
         
+        if not var_counts:  # All variables assigned
+            return self._complete_assignment(assignments, formula.num_variables)
+        
+        var = max(var_counts.items(), key=lambda x: x[1])[0]
+        
+        if self.debug:
+            logger.debug(f"{indent}Selected most frequent var x{var}")
+        
+        # Try True first
         new_assignments = assignments.copy()
         new_assignments[var] = True
         result = self._dpll(
-            self._simplify_formula(formula, new_assignments),
+            self._simplify_formula(formula, {var: True}),
             new_assignments
         )
         if result is not None:
-            if self.debug:
-                logger.debug(f"{indent}Found solution in True branch!")
             return result
-
-        # Try False
-        if self.debug:
-            logger.debug(f"{indent}True branch failed, trying x{var}=False")
         
+        # Try False
         new_assignments = assignments.copy()
         new_assignments[var] = False
         self.stats['backtracks'] += 1
-        
-        if self.debug:
-            logger.debug(f"{indent}Backtracking... (total backtracks: {self.stats['backtracks']})")
-        
         return self._dpll(
-            self._simplify_formula(formula, new_assignments),
+            self._simplify_formula(formula, {var: False}),
             new_assignments
         )
     
