@@ -5,10 +5,8 @@ import seaborn as sns
 import numpy as np
 from typing import Dict, List, Tuple, Optional
 from collections import defaultdict
-from SAT import (
-    DPLLSolver, RandomFormulaGenerator, ExhaustiveSATSolver,
-    RandomSATSolver
-)
+from SAT import DPLLSolver, ExhaustiveSATSolver, RandomSATSolver
+from Utilities import RandomFormulaGenerator
 
 class ComprehensiveSATAnalyzer:
     """Enhanced comprehensive analyzer for SAT solver analysis"""
