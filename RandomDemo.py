@@ -1,9 +1,9 @@
 from SAT import RandomSATSolver, Formula
-from Utilities import RandomFormulaGenerator, FormulaSimplifier
+from Utilities import RandomFormulaGenerator
 from BaseVisualizer import BaseVisualizer
 import time
 import sys
-from colorama import Fore, Style, init
+from colorama import Fore, Style
 import random
 
 class RandomWalkVisualizer(RandomSATSolver, BaseVisualizer):
@@ -30,9 +30,8 @@ class RandomWalkVisualizer(RandomSATSolver, BaseVisualizer):
         current_assignment = assignment.copy()
         prev_unsat_count = float('inf')
         
-        # Clear screen and print step counter
+        # Clear screen
         self.clear_screen()
-        self.print_step_counter(self.step_count, self.total_flips)
         
         # Print current state
         self.color_print("\n" + "="*50, Fore.CYAN)
@@ -54,7 +53,6 @@ class RandomWalkVisualizer(RandomSATSolver, BaseVisualizer):
             
             # Clear screen and update state
             self.clear_screen()
-            self.print_step_counter(self.step_count, self.total_flips)
             
             # Print current state
             self.color_print("\n" + "="*50, Fore.CYAN)
