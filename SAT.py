@@ -1,14 +1,11 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Set, Tuple, Any
+from typing import Dict, Optional, Tuple, List
 from enum import Enum
 import random
 import logging
-from functools import wraps
-import numpy as np
-from collections import Counter, defaultdict
 from SolverStats import create_solver_statistics
-from Utilities import Literal, Clause, Formula, RandomFormulaGenerator, FormulaSimplifier
+from Utilities import Literal, Clause, Formula, FormulaSimplifier
+from collections import defaultdict
 
 # Configure logging
 logging.basicConfig(
@@ -130,7 +127,21 @@ class DPLLSolver(SATSolver):
                 FormulaSimplifier.simplify_formula(formula, new_assignments),
                 new_assignments
             )
-        
+
+        # Two-clause rule
+        two_clause_result = self._apply_two_clause_rule(formula)
+        if two_clause_result:
+            self.stats.increment("two_clause_applications")
+            var, value = two_clause_result
+            new_assignments = assignments.copy()
+            new_assignments[var] = value
+            
+            return self._dpll(
+                FormulaSimplifier.simplify_formula(formula, new_assignments),
+                new_assignments
+            )
+
+
         # Variable selection
         var = self._choose_next_variable(formula)
         self.stats.append("variable_frequencies", var)
@@ -172,7 +183,77 @@ class DPLLSolver(SATSolver):
             return Literal(min(pure_negative), False)
             
         return None
+
+    def _apply_two_clause_rule(self, formula: Formula) -> Optional[Tuple[int, bool]]:
+        """
+        Apply the two-clause rule to find forced assignments.
+        Returns (variable, value) tuple if a forced assignment is found, None otherwise.
+        
+        The two-clause rule looks for:
+        1. (x ∨ y) ∧ (x ∨ ¬y) → x must be True
+        2. (¬x ∨ y) ∧ (¬x ∨ ¬y) → x must be False
+        """
+        # First, collect all binary clauses
+        binary_clauses = [clause for clause in formula.clauses if len(clause.literals) == 2]
+        
+        # Create a map of variable to its clauses for efficient lookup
+        var_to_clauses = defaultdict(list)
+        for clause in binary_clauses:
+            for lit in clause.literals:
+                var_to_clauses[lit.variable].append(clause)
+        
+        # Check each variable
+        for var in var_to_clauses:
+            # Get all binary clauses containing this variable
+            relevant_clauses = var_to_clauses[var]
+            if len(relevant_clauses) < 2:
+                continue
+                
+            # Look for clauses that force an assignment
+            pos_clauses = []  # Clauses where var appears positively
+            neg_clauses = []  # Clauses where var appears negatively
+            
+            for clause in relevant_clauses:
+                for lit in clause.literals:
+                    if lit.variable == var:
+                        if lit.is_positive:
+                            pos_clauses.append(clause)
+                        else:
+                            neg_clauses.append(clause)
+            
+            # Check for forcing patterns
+            force_true = self._check_forcing_pattern(pos_clauses, var, True)
+            force_false = self._check_forcing_pattern(neg_clauses, var, False)
+            
+            if force_true:
+                return (var, True)
+            if force_false:
+                return (var, False)
+        
+        return None
     
+    def _check_forcing_pattern(self, clauses: List[Clause], var: int, is_positive: bool) -> bool:
+        """
+        Check if a set of clauses forces a variable assignment.
+        Returns True if the variable is forced to the specified polarity.
+        """
+        if len(clauses) < 2:
+            return False
+            
+        # For each pair of clauses
+        for i, clause1 in enumerate(clauses):
+            for clause2 in clauses[i + 1:]:
+                # Get the other literals in each clause
+                other_lit1 = next(lit for lit in clause1.literals if lit.variable != var)
+                other_lit2 = next(lit for lit in clause2.literals if lit.variable != var)
+                
+                # Check if they form a forcing pattern
+                if (other_lit1.variable == other_lit2.variable and 
+                    other_lit1.is_positive != other_lit2.is_positive):
+                    return True
+        
+        return False
+
     def _choose_next_variable(self, formula: Formula) -> int:
         """Choose next variable based on frequency"""
         frequencies = formula.calculate_variable_frequencies()

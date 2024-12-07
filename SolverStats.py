@@ -105,6 +105,9 @@ class DPLLStatistics(SolverStatistics):
             "pure_literals": StatisticValue(
                 StatisticType.COUNTER, 0, "Number of pure literals eliminated"
             ),
+            "two_clause_rules": StatisticValue(
+                StatisticType.COUNTER, 0, "Number of two-clause rules applied"
+            ),
             "decision_depths": StatisticValue(
                 StatisticType.LIST, [], "Depths of decision tree branches"
             ),
