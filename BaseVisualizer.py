@@ -57,19 +57,28 @@ class BaseVisualizer:
         if extra_info:
             counter_text += f" | {extra_info}"
         
-        # Move to top-right corner
-        print(f"\033[0;{self.term_width - len(counter_text)}H", end='')
+        # Calculate box dimensions
+        box_width = len(counter_text) + 2  # Add 2 for padding
+        start_col = self.term_width - box_width - 2  # Subtract 2 for box borders
+        start_row = 2  # Start the box at row 2 instead of row 0
         
-        # Print counter with box
-        self.color_print(f"╭{'─' * (len(counter_text) + 2)}╮", Fore.CYAN)
-        print(f"\033[{self.term_width - len(counter_text)}C", end='')
-        self.color_print(f"│ {counter_text} │", Fore.CYAN)
-        print(f"\033[{self.term_width - len(counter_text)}C", end='')
-        self.color_print(f"╰{'─' * (len(counter_text) + 2)}╯", Fore.CYAN)
+        # Box drawing characters
+        top = f"╭{'─' * box_width}╮"
+        middle = f"│ {counter_text} │"
+        bottom = f"╰{'─' * box_width}╯"
+        
+        # Move to positions and print each line
+        # Add start_row to each row position
+        print(f"\033[{start_row};{start_col}H", end='')
+        self.color_print(top, Fore.CYAN)
+        print(f"\033[{start_row + 1};{start_col}H", end='')
+        self.color_print(middle, Fore.CYAN)
+        print(f"\033[{start_row + 2};{start_col}H", end='')
+        self.color_print(bottom, Fore.CYAN)
         
         # Restore cursor position
         print("\033[u", end='')
-        sys.stdout.flush()
+        sys.stdout.flush()  
     
     def clear_screen(self):
         """Clear the screen and move cursor to top"""
