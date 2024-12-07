@@ -1,11 +1,10 @@
-import time
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-from typing import Dict, List, Tuple, Optional
+from typing import List
 from collections import defaultdict
-from SAT import DPLLSolver, ExhaustiveSATSolver, RandomSATSolver
+from SATSolver import DPLLSolver, ExhaustiveSATSolver, RandomSATSolver
 from Utilities import RandomFormulaGenerator
 
 class ComprehensiveSATAnalyzer:

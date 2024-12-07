@@ -1,9 +1,9 @@
-from SAT import DPLLSolver, Formula
+from SATSolver import DPLLSolver, Formula
 from Utilities import RandomFormulaGenerator, FormulaSimplifier
 from BaseVisualizer import BaseVisualizer
 import time
 import sys
-from colorama import Fore, Style, init
+from colorama import Fore, Style
 
 class DPLLVisualizer(DPLLSolver, BaseVisualizer):
     """DPLL Solver with interactive visualization"""

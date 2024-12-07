@@ -1,4 +1,4 @@
-from SAT import RandomSATSolver, Formula
+from SATSolver import RandomSATSolver, Formula
 from Utilities import RandomFormulaGenerator
 from BaseVisualizer import BaseVisualizer
 import time

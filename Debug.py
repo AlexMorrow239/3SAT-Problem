@@ -4,7 +4,8 @@ import pandas as pd
 from typing import Dict, List, Any, Type
 from dataclasses import dataclass
 import time
-from SAT import DPLLSolver, RandomSATSolver, ExhaustiveSATSolver, RandomFormulaGenerator
+from SATSolver import DPLLSolver, RandomSATSolver, ExhaustiveSATSolver
+from Utilities import RandomFormulaGenerator
 
 @dataclass
 class DebugResult:
