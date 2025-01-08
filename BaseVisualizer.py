@@ -1,9 +1,8 @@
 import shutil
 import sys
-import time
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
-from colorama import Back, Fore, Style, init
+from colorama import Fore, Style, init
 
 # Initialize colorama for cross-platform color support
 init()
