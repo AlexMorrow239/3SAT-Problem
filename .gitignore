@@ -3,26 +3,33 @@
 *.pyc
 *.pyo
 __pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
 
-# Visual Studio #
-#################
+# IDE #
+#######
+.idea/
 .vscode/
-*.csproj
-*.sln
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# macOS #
-########
-*.DS_Store
-
-# Windows #
-###########
-Thumbs.db
-Desktop.ini
-
-# Linux #
-#########
+*.swp
+*.swo
 *~
+
+# OS Generated Files #
+#####################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
